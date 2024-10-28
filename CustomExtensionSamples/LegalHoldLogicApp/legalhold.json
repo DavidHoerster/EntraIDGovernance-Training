@@ -532,7 +532,7 @@
                                         },
                                         {
                                             "name": "p",
-                                            "value": "/subscriptions/0a4ae5e6-9129-47c6-b731-b3e80d790f8a/resourceGroups/custom-ext-iga-rg/providers/Microsoft.Logic/workflows/LegalHoldLogicApp"
+                                            "value": "[concat('/subscriptions/0a4ae5e6-9129-47c6-b731-b3e80d790f8a/resourceGroups/custom-ext-iga-rg/providers/Microsoft.Logic/workflows/', parameters('workflows_LegalHoldLogicApp_name'))]"
                                         }
                                     ]
                                 }
