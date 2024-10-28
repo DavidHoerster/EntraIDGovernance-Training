@@ -1,0 +1,513 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workflows_LegalHoldLogicApp_name": {
+            "defaultValue": "LegalHoldLogicApp",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('workflows_LegalHoldLogicApp_name')]",
+            "location": "eastus",
+            "tags": {
+                "Purpose": "Azure AD Lifecycle Workflows"
+            },
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "Http",
+                            "inputs": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "callbackUriPath": {
+                                                    "description": "CallbackUriPath used for Resume Action",
+                                                    "title": "Data.CallbackUriPath",
+                                                    "type": "string"
+                                                },
+                                                "subject": {
+                                                    "properties": {
+                                                        "displayName": {
+                                                            "description": "DisplayName of the Subject",
+                                                            "title": "Subject.DisplayName",
+                                                            "type": "string"
+                                                        },
+                                                        "email": {
+                                                            "description": "Email of the Subject",
+                                                            "title": "Subject.Email",
+                                                            "type": "string"
+                                                        },
+                                                        "id": {
+                                                            "description": "Id of the Subject",
+                                                            "title": "Subject.Id",
+                                                            "type": "string"
+                                                        },
+                                                        "manager": {
+                                                            "properties": {
+                                                                "displayName": {
+                                                                    "description": "DisplayName parameter for Manager",
+                                                                    "title": "Manager.DisplayName",
+                                                                    "type": "string"
+                                                                },
+                                                                "email": {
+                                                                    "description": "Mail parameter for Manager",
+                                                                    "title": "Manager.Mail",
+                                                                    "type": "string"
+                                                                },
+                                                                "id": {
+                                                                    "description": "Id parameter for Manager",
+                                                                    "title": "Manager.Id",
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        "userPrincipalName": {
+                                                            "description": "UserPrincipalName of the Subject",
+                                                            "title": "Subject.UserPrincipalName",
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "task": {
+                                                    "properties": {
+                                                        "displayName": {
+                                                            "description": "DisplayName for Task Object",
+                                                            "title": "Task.DisplayName",
+                                                            "type": "string"
+                                                        },
+                                                        "id": {
+                                                            "description": "Id for Task Object",
+                                                            "title": "Task.Id",
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "taskProcessingResult": {
+                                                    "properties": {
+                                                        "createdDateTime": {
+                                                            "description": "CreatedDateTime for TaskProcessingResult Object",
+                                                            "title": "TaskProcessingResult.CreatedDateTime",
+                                                            "type": "string"
+                                                        },
+                                                        "id": {
+                                                            "description": "Id for TaskProcessingResult Object",
+                                                            "title": "TaskProcessingResult.Id",
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "workflow": {
+                                                    "properties": {
+                                                        "displayName": {
+                                                            "description": "DisplayName for Workflow Object",
+                                                            "title": "Workflow.DisplayName",
+                                                            "type": "string"
+                                                        },
+                                                        "id": {
+                                                            "description": "Id for Workflow Object",
+                                                            "title": "Workflow.Id",
+                                                            "type": "string"
+                                                        },
+                                                        "workflowVerson": {
+                                                            "description": "WorkflowVersion for Workflow Object",
+                                                            "title": "Workflow.WorkflowVersion",
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "source": {
+                                            "description": "Context in which an event happened",
+                                            "title": "Request.Source",
+                                            "type": "string"
+                                        },
+                                        "type": {
+                                            "description": "Value describing the type of event related to the originating occurrence.",
+                                            "title": "Request.Type",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "actions": {
+                        "Initialize_variable_Audience": {
+                            "runAfter": {},
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "Audience",
+                                        "type": "string",
+                                        "value": "https://graph.microsoft.com"
+                                    }
+                                ]
+                            }
+                        },
+                        "Get_User_details": {
+                            "runAfter": {
+                                "Initialize_variable_Audience": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Http",
+                            "inputs": {
+                                "uri": "https://graph.microsoft.com/beta/users/@{triggerBody()?['data']?['subject']?['id']}",
+                                "method": "GET",
+                                "authentication": {
+                                    "type": "ManagedServiceIdentity",
+                                    "audience": "@{variables('Audience')}"
+                                }
+                            },
+                            "runtimeConfiguration": {
+                                "contentTransfer": {
+                                    "transferMode": "Chunked"
+                                }
+                            }
+                        },
+                        "Parse_JSON_from_user": {
+                            "runAfter": {
+                                "Get_User_details": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ParseJson",
+                            "inputs": {
+                                "content": "@body('Get_User_details')",
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "@@odata.context": {
+                                            "type": "string"
+                                        },
+                                        "@@microsoft.graph.tips": {
+                                            "type": "string"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        },
+                                        "deletedDateTime": {},
+                                        "accountEnabled": {
+                                            "type": "boolean"
+                                        },
+                                        "ageGroup": {},
+                                        "businessPhones": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "city": {
+                                            "type": "string"
+                                        },
+                                        "createdDateTime": {
+                                            "type": "string"
+                                        },
+                                        "creationType": {},
+                                        "companyName": {
+                                            "type": "string"
+                                        },
+                                        "consentProvidedForMinor": {},
+                                        "country": {
+                                            "type": "string"
+                                        },
+                                        "department": {
+                                            "type": "string"
+                                        },
+                                        "displayName": {
+                                            "type": "string"
+                                        },
+                                        "employeeId": {
+                                            "type": "string"
+                                        },
+                                        "employeeHireDate": {
+                                            "type": "string"
+                                        },
+                                        "employeeLeaveDateTime": {},
+                                        "employeeType": {
+                                            "type": "string"
+                                        },
+                                        "faxNumber": {},
+                                        "givenName": {
+                                            "type": "string"
+                                        },
+                                        "imAddresses": {
+                                            "type": "array"
+                                        },
+                                        "infoCatalogs": {
+                                            "type": "array"
+                                        },
+                                        "isLicenseReconciliationNeeded": {
+                                            "type": "boolean"
+                                        },
+                                        "isManagementRestricted": {},
+                                        "isResourceAccount": {},
+                                        "jobTitle": {
+                                            "type": "string"
+                                        },
+                                        "legalAgeGroupClassification": {},
+                                        "mail": {},
+                                        "mailNickname": {
+                                            "type": "string"
+                                        },
+                                        "mobilePhone": {
+                                            "type": "string"
+                                        },
+                                        "onPremisesDistinguishedName": {
+                                            "type": "string"
+                                        },
+                                        "officeLocation": {},
+                                        "onPremisesDomainName": {
+                                            "type": "string"
+                                        },
+                                        "onPremisesImmutableId": {
+                                            "type": "string"
+                                        },
+                                        "onPremisesLastSyncDateTime": {
+                                            "type": "string"
+                                        },
+                                        "onPremisesSecurityIdentifier": {
+                                            "type": "string"
+                                        },
+                                        "onPremisesSamAccountName": {
+                                            "type": "string"
+                                        },
+                                        "onPremisesSyncEnabled": {
+                                            "type": "boolean"
+                                        },
+                                        "onPremisesUserPrincipalName": {
+                                            "type": "string"
+                                        },
+                                        "otherMails": {
+                                            "type": "array"
+                                        },
+                                        "passwordPolicies": {},
+                                        "postalCode": {
+                                            "type": "string"
+                                        },
+                                        "preferredDataLocation": {},
+                                        "preferredLanguage": {
+                                            "type": "string"
+                                        },
+                                        "proxyAddresses": {
+                                            "type": "array"
+                                        },
+                                        "refreshTokensValidFromDateTime": {
+                                            "type": "string"
+                                        },
+                                        "securityIdentifier": {
+                                            "type": "string"
+                                        },
+                                        "showInAddressList": {},
+                                        "signInSessionsValidFromDateTime": {
+                                            "type": "string"
+                                        },
+                                        "state": {
+                                            "type": "string"
+                                        },
+                                        "streetAddress": {
+                                            "type": "string"
+                                        },
+                                        "surname": {
+                                            "type": "string"
+                                        },
+                                        "usageLocation": {},
+                                        "userPrincipalName": {
+                                            "type": "string"
+                                        },
+                                        "externalUserConvertedOn": {},
+                                        "externalUserState": {},
+                                        "externalUserStateChangeDateTime": {},
+                                        "userType": {
+                                            "type": "string"
+                                        },
+                                        "extension_1f2c13205c644327af632a719cf317af_employeeType": {
+                                            "type": "string"
+                                        },
+                                        "extension_1f2c13205c644327af632a719cf317af_employeeID": {
+                                            "type": "string"
+                                        },
+                                        "employeeOrgData": {},
+                                        "passwordProfile": {},
+                                        "assignedLicenses": {
+                                            "type": "array"
+                                        },
+                                        "assignedPlans": {
+                                            "type": "array"
+                                        },
+                                        "authorizationInfo": {
+                                            "type": "object",
+                                            "properties": {
+                                                "certificateUserIds": {
+                                                    "type": "array"
+                                                }
+                                            }
+                                        },
+                                        "cloudRealtimeCommunicationInfo": {
+                                            "type": "object",
+                                            "properties": {
+                                                "isSipEnabled": {}
+                                            }
+                                        },
+                                        "deviceKeys": {
+                                            "type": "array"
+                                        },
+                                        "identities": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "signInType": {
+                                                        "type": "string"
+                                                    },
+                                                    "issuer": {
+                                                        "type": "string"
+                                                    },
+                                                    "issuerAssignedId": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "signInType",
+                                                    "issuer",
+                                                    "issuerAssignedId"
+                                                ]
+                                            }
+                                        },
+                                        "onPremisesExtensionAttributes": {
+                                            "type": "object",
+                                            "properties": {
+                                                "extensionAttribute1": {},
+                                                "extensionAttribute2": {},
+                                                "extensionAttribute3": {},
+                                                "extensionAttribute4": {},
+                                                "extensionAttribute5": {},
+                                                "extensionAttribute6": {},
+                                                "extensionAttribute7": {},
+                                                "extensionAttribute8": {},
+                                                "extensionAttribute9": {},
+                                                "extensionAttribute10": {},
+                                                "extensionAttribute11": {},
+                                                "extensionAttribute12": {},
+                                                "extensionAttribute13": {},
+                                                "extensionAttribute14": {},
+                                                "extensionAttribute15": {}
+                                            }
+                                        },
+                                        "onPremisesProvisioningErrors": {
+                                            "type": "array"
+                                        },
+                                        "onPremisesSipInfo": {
+                                            "type": "object",
+                                            "properties": {
+                                                "isSipEnabled": {
+                                                    "type": "boolean"
+                                                },
+                                                "sipDeploymentLocation": {},
+                                                "sipPrimaryAddress": {}
+                                            }
+                                        },
+                                        "provisionedPlans": {
+                                            "type": "array"
+                                        },
+                                        "serviceProvisioningErrors": {
+                                            "type": "array"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "POST_to_API_driven_provisioning_Change_OU_and_description": {
+                            "runAfter": {
+                                "Parse_JSON_from_user": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Http",
+                            "inputs": {
+                                "uri": "https://graph.microsoft.com/v1.0/servicePrincipals/7ead1f54-bf38-41d1-84e4-7cd00d4fef3f/synchronization/jobs/API2AD.916e52d1604945d7ba5946876131ab95.8bb9e200-d446-4844-9812-bbfe0144ae4d/bulkUpload",
+                                "method": "POST",
+                                "headers": {
+                                    "Content-Type": "application/scim+json"
+                                },
+                                "body": {
+                                    "schemas": [
+                                        "urn:ietf:params:scim:api:messages:2.0:BulkRequest"
+                                    ],
+                                    "Operations": [
+                                        {
+                                            "method": "POST",
+                                            "bulkId": "@{body('Parse_JSON_from_user')?['employeeId']}",
+                                            "path": "/Users",
+                                            "data": {
+                                                "schemas": [
+                                                    "urn:ietf:params:scim:schemas:core:2.0:User",
+                                                    "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
+                                                    "urn:ietf:params:scim:schemas:extension:contoso:1.0:User"
+                                                ],
+                                                "externalId": "@{body('Parse_JSON_from_user')?['employeeId']}",
+                                                "active": true,
+                                                "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User": {
+                                                    "department": "LEGALHOLD"
+                                                },
+                                                "urn:ietf:params:scim:schemas:extension:contoso:1.0:User": {
+                                                    "Description": "LEGALHOLD",
+                                                    "parentDN": "OU=LegalHold,DC=ATLPFE,DC=local"
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "failOnErrors": null
+                                },
+                                "authentication": {
+                                    "type": "ManagedServiceIdentity",
+                                    "audience": "@{variables('Audience')}"
+                                }
+                            },
+                            "runtimeConfiguration": {
+                                "contentTransfer": {
+                                    "transferMode": "Chunked"
+                                }
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {}
+                    }
+                }
+            }
+        }
+    ]
+}
