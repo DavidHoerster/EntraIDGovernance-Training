@@ -515,7 +515,7 @@
                                     "type": "AADPOP",
                                     "claims": [
                                         {
-                                            "name": "Issuer",
+                                            "name": "iss",
                                             "value": "[concat('https://sts.windows.net/', subscription().tenantId, '/')]"
                                         },
                                         {
