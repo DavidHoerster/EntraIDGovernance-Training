@@ -506,6 +506,39 @@
                     "$connections": {
                         "value": {}
                     }
+                },
+                "accessControl": {
+                    "triggers": {
+                        "openAuthenticationPolicies": {
+                            "policies": {
+                                "AzureADEntitlementManagementAuthPolicyV2": {
+                                    "type": "AADPOP",
+                                    "claims": [
+                                        {
+                                            "name": "Issuer",
+                                            "value": "[concat('https://sts.windows.net/', subscription().tenantId, '/')]"
+                                        },
+                                        {
+                                            "name": "appid",
+                                            "value": "00001111-aaaa-2222-bbbb-3333cccc4444"
+                                        },
+                                        {
+                                            "name": "m",
+                                            "value": "POST"
+                                        },
+                                        {
+                                            "name": "u",
+                                            "value": "management.azure.com"
+                                        },
+                                        {
+                                            "name": "p",
+                                            "value": "/subscriptions/0a4ae5e6-9129-47c6-b731-b3e80d790f8a/resourceGroups/custom-ext-iga-rg/providers/Microsoft.Logic/workflows/LegalHoldLogicApp"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
